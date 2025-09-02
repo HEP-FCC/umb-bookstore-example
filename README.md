@@ -1,12 +1,8 @@
-# Universal Metadata Browser Template
+# Example bookstore adaptation of the umb-template
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Customizable and modularized, full-stack web application template for creating a searchable metadata catalog.
-
-## 🌌 Example adaptations
-
-- <https://fcc-physics-events.web.cern.ch>
+[This commit](https://github.com/HEP-FCC/umb-bookstore-example/commit/264c5afe6173dc2e4d7e4db7a835f7c2d0c16d81) from this repository showcases an example configuration of the [umb-template](https://github.com/HEP-FCC/umb-template) based on the [docs/TUTORIAL.md](https://github.com/HEP-FCC/umb-template/blob/master/docs/TUTORIAL.md).
 
 ## ✨ Features
 
