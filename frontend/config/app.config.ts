@@ -14,16 +14,16 @@ export const APP_CONFIG = {
      * The main entity table name (source of truth for all data)
      * This table should contain foreign keys to all navigation entities
      */
-    mainTable: "books" as const,
+    mainTable: "entities" as const,
 
     /**
      * Application branding and metadata
      */
     branding: {
-        title: "Bookstore Catalog",
-        appTitle: "Bookstore Catalog Portal",
-        description: "Discover and explore our book collection",
-        defaultTitle: "Book Search",
+        title: "Universal Metadata Browser",
+        appTitle: "Universal Metadata Browser",
+        description: "Search and explore your metadata catalog",
+        defaultTitle: "Metadata Search",
     },
 
     /**
@@ -86,7 +86,7 @@ export const APP_CONFIG = {
      */
     metadata: {
         // Default metadata fields to display as badges/tags - customize for your domain
-        defaultSelectedFields: ["authors", "isbn", "pages", "price"] as const,
+        defaultSelectedFields: ["title", "description", "status"] as const,
     },
 
     /**
@@ -94,7 +94,7 @@ export const APP_CONFIG = {
      */
     downloads: {
         // Prefix for downloaded file names
-        fileNamePrefix: "bookstore_catalog" as const,
+        fileNamePrefix: "metadata_entities" as const,
     },
 
     /**
@@ -102,7 +102,7 @@ export const APP_CONFIG = {
      */
     cookies: {
         // Prefix for all cookie names used by the application
-        namePrefix: "bookstore" as const,
+        namePrefix: "metadata" as const,
     },
 
     /**
@@ -111,7 +111,7 @@ export const APP_CONFIG = {
      */
     navigationFallback: {
         // Common navigation types in expected order - customize for your domain
-        order: ["publisher", "genre", "language", "format"] as const,
+        order: ["category", "type", "source", "status", "format"] as const,
     },
 } as const;
 

@@ -1,8 +1,13 @@
-# Example bookstore adaptation of the umb-template
+# Universal Metadata Browser Template
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-[This commit](https://github.com/HEP-FCC/umb-bookstore-example/commit/264c5afe6173dc2e4d7e4db7a835f7c2d0c16d81) from this repository showcases an example configuration of the [umb-template](https://github.com/HEP-FCC/umb-template) based on the [docs/TUTORIAL.md](https://github.com/HEP-FCC/umb-template/blob/master/docs/TUTORIAL.md).
+Customizable and modularized, full-stack web application template for creating a searchable metadata catalog.
+
+## 🌌 Example adaptations
+
+- [Example of a configuration commit based on the docs/TUTORIAL.md](https://github.com/HEP-FCC/umb-bookstore-example/commit/264c5afe6173dc2e4d7e4db7a835f7c2d0c16d81)
+- <https://fcc-physics-events.web.cern.ch>
 
 ## ✨ Features
 
@@ -73,7 +78,7 @@ Before starting the application, you need to:
 
 #### Schema Design Guidelines
 
-**Entity Name Field Requirement**: Your JSON data must include a `name` field for each entity (or configure a different field via `METADATA_BROWSER_ENTITY_NAME_FIELD`). This field serves as the primary identifier for:
+**Entity Name Field Requirement**: Your Pydantic model must include a `name`. You can parse it from JSON field with other name, but in the Pydantic model and in the database schema it must be called `name`, at least for now. We can fairly easily add support other names defined in config if required later.
 
 ```sql
 CREATE TABLE IF NOT EXISTS your_main_table (
@@ -117,6 +122,7 @@ Your main table **must include** these system columns for proper functionality:
 
 ```sql
 -- Required system columns (automatically managed by the system)
+name VARCHAR NOT NULL                                -- Primary entity identifier
 uuid UUID PRIMARY KEY,                    -- Deterministic UUID for conflict resolution
 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),  -- Auto-set on creation
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),  -- Auto-updated on changes
@@ -124,10 +130,7 @@ last_edited_at TIMESTAMP WITH TIME ZONE,            -- Manual edit tracking
 edited_by_name VARCHAR,                              -- User who made manual edits
 metadata JSONB,                                      -- Flexible storage for unmapped fields
 title VARCHAR,                                       -- Display title (from metadata or name)
-your_entity_name_field VARCHAR NOT NULL             -- Primary entity identifier (configurable)
 ```
-
-**Important**: The entity name field name is configurable via `METADATA_BROWSER_ENTITY_NAME_FIELD` environment variable (default: `"name"`). The system automatically excludes this field and other system columns during JSON-to-database field mapping to prevent conflicts.
 
 ### 3. Configure Authentication (Optional)
 
