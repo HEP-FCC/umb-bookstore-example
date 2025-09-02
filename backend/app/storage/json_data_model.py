@@ -1,49 +1,14 @@
 """
-This file defines the Pydantic models used to parse and validate the
-structure of the incoming JSON data dictionaries. It does not contain
-any database logic.
+Bookstore-specific data models for the Universal Metadata Browser.
 
-USAGE FOR CUSTOM DATA FORMATS:
-===============================
-
-To add support for your custom data format:
-
-1. Create your entity class by inheriting from BaseEntityData:
-   ```python
-   class MyCustomEntity(BaseEntityData):
-       name: str
-       type: str
-       custom_field: str | None = None
-
-       def get_all_metadata(self) -> dict[str, Any]:
-           return {"type": self.type, "custom_field": self.custom_field}
-   ```
-
-2. Create your collection class by inheriting from BaseEntityCollection:
-   ```python
-   class MyCustomCollection(BaseEntityCollection):
-       experiments: list[MyCustomEntity]
-
-       def get_entities(self) -> list[BaseEntityData]:
-           return self.experiments
-   ```
-
-3. Register your classes and detection rule:
-   ```python
-   def detect_my_format(raw_data: dict) -> bool:
-       return "experiments" in raw_data and isinstance(raw_data["experiments"], list)
-
-   EntityTypeRegistry.register_entity_class("MyCustomEntity", MyCustomEntity)
-   EntityTypeRegistry.register_collection_class("MyCustomCollection", MyCustomCollection)
-   EntityTypeRegistry.register_detection_rule(detect_my_format, MyCustomCollection)
-   ```
-
-The data import system will automatically detect and use your classes.
+This file defines the Pydantic models used to parse and validate
+book data from JSON files.
 """
 
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from datetime import date
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -71,49 +36,46 @@ class BaseEntityData(BaseModel, ABC):
         pass
 
 
-# NOTE(required): Users must define their own data model class
-# This is an example implementation - customize for your domain
-class ExampleEntity(BaseEntityData):
+class Book(BaseEntityData):
     """
-    Example Pydantic model for a single entity from the JSON dictionary.
+    Pydantic model for a single book from the JSON dictionary.
 
-    CUSTOMIZE THIS CLASS FOR YOUR DOMAIN:
-    - Replace field names with your actual data fields
-    - Update validation logic for your data types
-    - Modify navigation entity fields to match your schema
-    - Update get_all_metadata() to return your relevant metadata
-
-    Core fields that are likely to be present are defined explicitly,
-    while all other fields are stored in the raw_metadata for flexible handling.
+    Handles all book-specific fields and validation logic.
     """
 
-    # Example core fields - customize these for your domain
+    # Required name field for template compatibility
+    name: str = Field(default="Untitled Book")
+
+    # Core book fields
     title: str | None = Field(default=None)
+    authors: list[str] = Field(default_factory=list)
+    isbn: str | None = Field(default=None)
+    publication_date: date | str | None = Field(default=None)
+    pages: int | None = Field(default=None)
+    price: float | None = Field(default=None)
     description: str | None = Field(default=None)
-    comment: str | None = Field(default=None)
-    status: str | None = Field(default=None)
-    size: int | None = Field(default=None)
-    path: str | None = Field(default=None)
+    cover_image_url: str | None = Field(default=None)
+    purchase_url: str | None = Field(default=None)
 
-    # Example navigation entity fields - customize these to match your navigation tables
-    category: str | None = Field(default=None)
-    type: str | None = Field(
-        default=None, alias="entity-type"
-    )  # Example of alias usage
-    source: str | None = Field(default=None)
+    # Navigation entity fields (will become foreign keys)
+    publisher: str | None = Field(default=None)
+    genre: str | None = Field(default=None)
+    language: str | None = Field(default=None)
     format: str | None = Field(default=None)
 
     # Store all other fields as metadata
     raw_metadata: dict[str, Any] = Field(default_factory=dict, exclude=True)
 
     @field_validator(
+        "name",
         "title",
         "description",
-        "comment",
-        "status",
-        "category",
-        "type",
-        "source",
+        "isbn",
+        "cover_image_url",
+        "purchase_url",
+        "publisher",
+        "genre",
+        "language",
         "format",
         mode="before",
     )
@@ -130,54 +92,111 @@ class ExampleEntity(BaseEntityData):
             return normalized if normalized else None
         return str(v) if v is not None else None
 
-    @field_validator("size", mode="before")
+    @field_validator("authors", mode="before")
     @classmethod
-    def handle_int_fields(cls, v: Any) -> int | None:
+    def handle_authors_field(cls, v: Any) -> list[str]:
         """
-        Handles integer fields that might be missing or null.
-        Returns None instead of raising an error for invalid values.
+        Handles authors field which can be a string or list of strings.
+        """
+        if v is None:
+            return []
+        if isinstance(v, str):
+            # Split on common separators and clean up
+            authors = [
+                author.strip() for author in re.split(r"[,;]", v) if author.strip()
+            ]
+            return authors
+        if isinstance(v, list):
+            return [str(author).strip() for author in v if str(author).strip()]
+        return [str(v).strip()] if str(v).strip() else []
+
+    @field_validator("pages", mode="before")
+    @classmethod
+    def handle_pages_field(cls, v: Any) -> int | None:
+        """
+        Handles pages field that might be missing or null.
         """
         if v is None or v == "":
             return None
         try:
-            return int(v)
+            pages = int(v)
+            return pages if pages > 0 else None
         except (ValueError, TypeError):
-            logger.warning(f"Cannot parse integer value: {v}. Setting to None.")
+            logger.warning(f"Cannot parse pages value: {v}. Setting to None.")
             return None
 
-    @field_validator("path", mode="before")
+    @field_validator("price", mode="before")
     @classmethod
-    def handle_path_field(cls, v: Any) -> str | None:
+    def handle_price_field(cls, v: Any) -> float | None:
         """
-        Handles path field that might be missing or null.
-        Returns None for empty/invalid paths.
+        Handles price field that might be missing or null.
         """
-        if v is None or v == "" or (isinstance(v, str) and v.strip() == ""):
+        if v is None or v == "":
             return None
-        return str(v).strip() if v is not None else None
+        try:
+            price = float(v)
+            return price if price >= 0 else None
+        except (ValueError, TypeError):
+            logger.warning(f"Cannot parse price value: {v}. Setting to None.")
+            return None
+
+    @field_validator("publication_date", mode="before")
+    @classmethod
+    def handle_publication_date_field(cls, v: Any) -> date | str | None:
+        """
+        Handles publication_date field that can be a date string in various formats.
+        """
+        if v is None or v == "":
+            return None
+        if isinstance(v, date):
+            return v
+        if isinstance(v, str):
+            # Try to parse common date formats
+            v = v.strip()
+            try:
+                # Try ISO format first (YYYY-MM-DD)
+                from datetime import datetime
+
+                return datetime.strptime(v, "%Y-%m-%d").date()
+            except ValueError:
+                try:
+                    # Try alternative formats
+                    return datetime.strptime(v, "%Y/%m/%d").date()
+                except ValueError:
+                    try:
+                        return datetime.strptime(v, "%m/%d/%Y").date()
+                    except ValueError:
+                        # If parsing fails, store as string for manual review
+                        logger.warning(
+                            f"Cannot parse date format: {v}. Storing as string."
+                        )
+                        return v
+        return str(v)
 
     @model_validator(mode="before")
     @classmethod
     def extract_metadata(cls, data: Any) -> Any:
         """
         Extract all fields not explicitly defined in the model into raw_metadata.
-        This allows flexible handling of varying JSON structures.
         """
         if not isinstance(data, dict):
             return data
 
-        # Fields that are explicitly handled by the model - UPDATE THESE FOR YOUR DOMAIN
+        # Fields that are explicitly handled by the model
         core_fields = {
+            "name",
             "title",
+            "authors",
+            "isbn",
+            "publication_date",
+            "pages",
+            "price",
             "description",
-            "comment",
-            "status",
-            "size",
-            "path",
-            "category",
-            "type",
-            "entity-type",  # alias for type
-            "source",
+            "cover_image_url",
+            "purchase_url",
+            "publisher",
+            "genre",
+            "language",
             "format",
         }
 
@@ -188,41 +207,45 @@ class ExampleEntity(BaseEntityData):
         # Extract all non-core fields into raw_metadata
         for key, value in data.items():
             if key not in core_fields:
-                # Skip large/unwanted fields like 'files' if they exist
-                if key != "files":
-                    raw_metadata[key] = value
+                raw_metadata[key] = value
 
         # Add raw_metadata to the processed data
         processed_data["raw_metadata"] = raw_metadata
 
+        # Ensure title is set as name for compatibility
+        if "title" in processed_data and processed_data["title"]:
+            processed_data["name"] = processed_data["title"]
+        elif "name" not in processed_data or not processed_data["name"]:
+            processed_data["name"] = "Untitled Book"
+
         return processed_data
 
-    # NOTE(required): Users must define this function
     def get_all_metadata(self) -> dict[str, Any]:
         """
         Returns all metadata including both core fields and raw_metadata.
-        Excludes None values and navigation entity fields (since they are stored in foreign key relationships).
-
-        CUSTOMIZE THIS FOR YOUR DOMAIN:
-        - Include/exclude fields based on what you want stored as metadata
-        - Navigation fields (category, type, source, format) are typically excluded
-          since they become foreign key relationships in the database
+        Excludes None values and navigation entity fields.
         """
         metadata: dict[str, Any] = {}
 
         # Add core fields that have values (excluding navigation fields)
         if self.title is not None:
             metadata["title"] = self.title
+        if self.authors:
+            metadata["authors"] = self.authors
+        if self.isbn is not None:
+            metadata["isbn"] = self.isbn
+        if self.publication_date is not None:
+            metadata["publication_date"] = str(self.publication_date)
+        if self.pages is not None:
+            metadata["pages"] = self.pages
+        if self.price is not None:
+            metadata["price"] = self.price
         if self.description is not None:
             metadata["description"] = self.description
-        if self.comment is not None:
-            metadata["comment"] = self.comment
-        if self.status is not None:
-            metadata["status"] = self.status
-        if self.size is not None:
-            metadata["size"] = self.size
-        if self.path is not None:
-            metadata["path"] = self.path
+        if self.cover_image_url is not None:
+            metadata["cover_image_url"] = self.cover_image_url
+        if self.purchase_url is not None:
+            metadata["purchase_url"] = self.purchase_url
 
         # Add all raw metadata
         metadata.update(self.raw_metadata)
@@ -248,33 +271,26 @@ class BaseEntityCollection(BaseModel, ABC):
         pass
 
 
-class ExampleEntityCollection(BaseEntityCollection):
+class BookCollection(BaseEntityCollection):
     """
-    Example Pydantic model for the root of the JSON dictionary.
-
-    CUSTOMIZE THIS CLASS FOR YOUR DOMAIN:
-    - Replace 'entities' field name with your actual collection field
-    - Update the field type to match your entity class name
-    - Update the get_entities() method to return your entities
+    Pydantic model for the root of the book JSON dictionary.
     """
 
-    entities: list[ExampleEntity]  # Customize the field name for your JSON structure
+    books: list[Book]
 
     def get_entities(self) -> list[BaseEntityData]:
         """
-        Return the list of entities in this collection.
+        Return the list of books in this collection.
 
         Returns:
-            List of BaseEntityData instances
+            List of Book instances
         """
-        return self.entities  # type: ignore[return-value]
+        return self.books  # type: ignore[return-value]
 
 
 class EntityTypeRegistry:
     """
     Registry for user-defined entity and collection classes.
-    Users can register their custom classes here to make them discoverable
-    by the data import system.
     """
 
     _entity_classes: dict[str, type[BaseEntityData]] = {}
@@ -305,10 +321,6 @@ class EntityTypeRegistry:
     ) -> None:
         """
         Register a detection rule that determines which collection class to use.
-
-        Args:
-            detection_func: Function that takes raw_data dict and returns True if this collection class should be used
-            collection_class: The collection class to use if detection_func returns True
         """
         cls._detection_rules.append((detection_func, collection_class))
 
@@ -318,12 +330,6 @@ class EntityTypeRegistry:
     ) -> type[BaseEntityCollection] | None:
         """
         Auto-detect the data format and return the appropriate collection class.
-
-        Args:
-            raw_data: Raw dictionary from JSON file
-
-        Returns:
-            Collection class or None if no suitable parser found
         """
         for detection_func, collection_class in cls._detection_rules:
             try:
@@ -366,24 +372,14 @@ class EntityTypeRegistry:
         }
 
 
-# Example detection function - customize for your JSON format
-def _detect_example_format(raw_data: dict[str, Any]) -> bool:
+def _detect_book_format(raw_data: dict[str, Any]) -> bool:
     """
-    Detect if raw_data matches your entity format.
-
-    CUSTOMIZE THIS FUNCTION FOR YOUR DOMAIN:
-    - Update the field name from 'entities' to match your JSON structure
-    - Add additional checks if needed to validate your format
+    Detect if raw_data matches the book collection format.
     """
-    return "entities" in raw_data and isinstance(raw_data["entities"], list)
+    return "books" in raw_data and isinstance(raw_data["books"], list)
 
 
-# Auto-register the example classes - UPDATE THESE FOR YOUR DOMAIN
-# Replace the class names and registry keys with your actual classes
-EntityTypeRegistry.register_entity_class("ExampleEntity", ExampleEntity)
-EntityTypeRegistry.register_collection_class(
-    "ExampleEntityCollection", ExampleEntityCollection
-)
-EntityTypeRegistry.register_detection_rule(
-    _detect_example_format, ExampleEntityCollection
-)
+# Register the book classes
+EntityTypeRegistry.register_entity_class("Book", Book)
+EntityTypeRegistry.register_collection_class("BookCollection", BookCollection)
+EntityTypeRegistry.register_detection_rule(_detect_book_format, BookCollection)

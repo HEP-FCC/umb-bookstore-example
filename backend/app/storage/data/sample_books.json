@@ -1,0 +1,125 @@
+{
+    "books": [
+        {
+            "title": "The Great Gatsby",
+            "authors": [
+                "F. Scott Fitzgerald"
+            ],
+            "isbn": "978-0-7432-7356-5",
+            "publication_date": "1925-04-10",
+            "pages": 180,
+            "price": 14.99,
+            "description": "A classic American novel about the Jazz Age and the American Dream.",
+            "cover_image_url": "https://example.com/covers/great-gatsby.jpg",
+            "purchase_url": "https://example.com/buy/great-gatsby",
+            "publisher": "Penguin Random House",
+            "genre": "Fiction",
+            "language": "English",
+            "format": "Paperback",
+            "awards": [
+                "Modern Library's Top 100"
+            ],
+            "theme": "American Dream"
+        },
+        {
+            "title": "To Kill a Mockingbird",
+            "authors": [
+                "Harper Lee"
+            ],
+            "isbn": "978-0-06-112008-4",
+            "publication_date": "1960-07-11",
+            "pages": 281,
+            "price": 16.99,
+            "description": "A gripping tale of racial injustice and childhood innocence in the American South.",
+            "cover_image_url": "https://example.com/covers/mockingbird.jpg",
+            "purchase_url": "https://example.com/buy/mockingbird",
+            "publisher": "HarperCollins",
+            "genre": "Fiction",
+            "language": "English",
+            "format": "Hardcover",
+            "awards": [
+                "Pulitzer Prize for Fiction"
+            ],
+            "setting": "Alabama, 1930s"
+        },
+        {
+            "title": "Dune",
+            "authors": [
+                "Frank Herbert"
+            ],
+            "isbn": "978-0-441-17271-9",
+            "publication_date": "1965-06-01",
+            "pages": 688,
+            "price": 18.99,
+            "description": "Epic science fiction novel set on the desert planet Arrakis.",
+            "cover_image_url": "https://example.com/covers/dune.jpg",
+            "purchase_url": "https://example.com/buy/dune",
+            "publisher": "Macmillan",
+            "genre": "Science Fiction",
+            "language": "English",
+            "format": "Paperback",
+            "awards": [
+                "Hugo Award",
+                "Nebula Award"
+            ],
+            "series": "Dune Chronicles"
+        },
+        {
+            "title": "Sapiens: A Brief History of Humankind",
+            "authors": [
+                "Yuval Noah Harari"
+            ],
+            "isbn": "978-0-06-231609-7",
+            "publication_date": "2014-09-04",
+            "pages": 443,
+            "price": 19.99,
+            "description": "An exploration of how Homo sapiens came to dominate the world.",
+            "cover_image_url": "https://example.com/covers/sapiens.jpg",
+            "purchase_url": "https://example.com/buy/sapiens",
+            "publisher": "HarperCollins",
+            "genre": "Non-Fiction",
+            "language": "English",
+            "format": "Hardcover",
+            "category": "History/Anthropology",
+            "bestseller": true
+        },
+        {
+            "title": "1984",
+            "authors": [
+                "George Orwell"
+            ],
+            "isbn": "978-0-452-28423-4",
+            "publication_date": "1949-06-08",
+            "pages": 328,
+            "price": 13.99,
+            "description": "A dystopian social science fiction novel about totalitarian control.",
+            "cover_image_url": "https://example.com/covers/1984.jpg",
+            "purchase_url": "https://example.com/buy/1984",
+            "publisher": "Penguin Random House",
+            "genre": "Fiction",
+            "language": "English",
+            "format": "Paperback",
+            "theme": "Dystopia",
+            "setting": "Oceania, 1984"
+        },
+        {
+            "title": "Pride and Prejudice",
+            "authors": [
+                "Jane Austen"
+            ],
+            "isbn": "978-0-14-143951-8",
+            "publication_date": "1813-01-28",
+            "pages": 432,
+            "price": 12.99,
+            "description": "A romantic novel that deals with issues of manners, upbringing, morality, education, and marriage.",
+            "cover_image_url": "https://example.com/covers/pride-prejudice.jpg",
+            "purchase_url": "https://example.com/buy/pride-prejudice",
+            "publisher": "Penguin Classics",
+            "genre": "Romance",
+            "language": "English",
+            "format": "Paperback",
+            "theme": "Love and Marriage",
+            "setting": "Rural England"
+        }
+    ]
+}
