@@ -108,7 +108,6 @@ class ExampleEntity(BaseEntityData):
 
     @field_validator(
         "title",
-        "name",
         "description",
         "comment",
         "status",
@@ -169,7 +168,7 @@ class ExampleEntity(BaseEntityData):
 
         # Fields that are explicitly handled by the model - UPDATE THESE FOR YOUR DOMAIN
         core_fields = {
-            "name",
+            "title",
             "description",
             "comment",
             "status",
@@ -212,8 +211,8 @@ class ExampleEntity(BaseEntityData):
         metadata: dict[str, Any] = {}
 
         # Add core fields that have values (excluding navigation fields)
-        if self.name is not None:
-            metadata["name"] = self.name
+        if self.title is not None:
+            metadata["title"] = self.title
         if self.description is not None:
             metadata["description"] = self.description
         if self.comment is not None:
