@@ -198,7 +198,6 @@ async def _process_batch_all_or_nothing(
                         main_table,
                         navigation_cache,
                         navigation_structure,
-                        database,
                     )
 
                 # If we get here, all entities succeeded
@@ -242,7 +241,6 @@ async def _process_batch_individually(
                         main_table,
                         navigation_cache,
                         navigation_structure,
-                        database,
                     )
                     processed_count += 1
         except Exception as e:
@@ -310,7 +308,6 @@ async def _process_single_entity(
     main_table: str,
     navigation_cache: dict[str, dict[str, int]],
     navigation_structure: dict[str, dict[str, str]],
-    database: "Database",
 ) -> None:
     """Process a single entity using pre-populated navigation entity cache."""
     entity_name = _generate_entity_name(entity_data, idx)
@@ -324,7 +321,7 @@ async def _process_single_entity(
     # Get metadata and create the main entity
     metadata_dict = entity_data.get_all_metadata()
     await _create_main_entity_with_conflict_resolution(
-        conn, entity_name, metadata_dict, foreign_key_ids, main_table, database
+        conn, entity_name, metadata_dict, foreign_key_ids, main_table
     )
 
 
@@ -481,12 +478,11 @@ async def _create_main_entity_with_conflict_resolution(
     metadata_dict: dict[str, Any],
     foreign_key_ids: dict[str, int | None],
     main_table: str,
-    database: "Database",
 ) -> None:
     """Create main entity using UUID-based conflict resolution."""
     try:
         await _create_main_entity(
-            conn, entity_name, metadata_dict, foreign_key_ids, main_table, database
+            conn, entity_name, metadata_dict, foreign_key_ids, main_table
         )
     except Exception as e:
         # Log any errors but don't do name-based retries since UUID handles uniqueness
@@ -500,7 +496,6 @@ async def _create_main_entity(
     metadata_dict: dict[str, Any],
     foreign_key_ids: dict[str, int | None],
     main_table: str,
-    database: "Database",
 ) -> None:
     """Create the main entity in the database."""
     # Generate deterministic UUID based on key fields
@@ -525,9 +520,6 @@ async def _create_main_entity(
         logger.debug(f"Processing metadata for {name}: {list(metadata_dict.keys())}")
 
         valid_columns = await get_valid_table_columns(conn, main_table)
-
-        # Get the configured entity name field from config
-        entity_name_field = "name"
 
         # Exclude system columns that shouldn't be set directly
         system_columns = {
